@@ -18,9 +18,6 @@ public:
     
 private:
     MyEventAction *fEventAction;
-    
-    G4ThreeVector fKaonInitialPosition;
-    G4ThreeVector fMuonInitialPosition;
 };
 
 #endif

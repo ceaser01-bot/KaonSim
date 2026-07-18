@@ -15,9 +15,6 @@ public:
     
     virtual void BeginOfRunAction(const G4Run*);
     virtual void EndOfRunAction(const G4Run*);
-    
-    void IncrementInFlightKaons() { ++fNumInFlightKaons; }
-    G4int GetNumInFlightKaons() const { return fNumInFlightKaons; }
 };
 
 #endif
