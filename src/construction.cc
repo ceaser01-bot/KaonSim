@@ -2,11 +2,13 @@
 #include "detector.hh"
 
 #include "G4Box.hh"
+#include "G4SubtractionSolid.hh"
 #include "G4LogicalVolume.hh"
 #include "G4NistManager.hh"
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
+#include <cmath>
 
 MyDetectorConstruction::MyDetectorConstruction()
 {
@@ -29,9 +31,10 @@ void MyDetectorConstruction::DefineMaterials()
 //    G4MaterialPropertiesTable *mptLAr = new G4MaterialPropertiesTable();
 //    mptLAr->AddProperty("RINDEX", energy, rindexLAr, 2);
     
-    // LAr->SetMaterialPropertiesTable(mptLAr);
+//     LAr->SetMaterialPropertiesTable(mptLAr);
     
     worldMat = nist->FindOrBuildMaterial("G4_AIR");
+    vacuum = nist->FindOrBuildMaterial("G4_Galactic");
 }
 
 G4VPhysicalVolume *MyDetectorConstruction::Construct()
@@ -50,21 +53,54 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     G4VPhysicalVolume *physWorld = new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicWorld, "physWorld", 0, false, 0, true);
     
     //
-    // Box (detector)
+    // Rectangular shell (really here to help me see that all the detectors are sitting in the right spots)
     //
     G4double xTube = 1.25*m;
     G4double yTube = 1.15*m;
     G4double zTube = 5.2*m;
- 
-    G4Box *solidTube = new G4Box("solidTube", xTube, yTube, zTube);
+    G4double thick = 0.1*m;
     
-//    G4LogicalVolume *logicTube = new G4LogicalVolume(solidTube, H2O, "logicalTube");
-    logicDetector = new G4LogicalVolume(solidTube, LAr, "logicDetector");
+    // Outer box dimensions
+    G4Box *outerBox = new G4Box("OuterBox", xTube+thick, yTube+thick, zTube+thick);
+    
+    // Inner cavity must be smaller than the outer box
+    G4Box *innerBox = new G4Box("InnerBox", xTube, yTube, zTube);
+    
+    // Subtract the inner box from the outer box
+    auto shellSolid = new G4SubtractionSolid("RectangularShell", outerBox, innerBox);
+    
+    auto shellLogical = new G4LogicalVolume(shellSolid, vacuum, "RectangularShellLogical"); // currently made of nothing (vacuum)
+
+    new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), shellLogical, "RectangularShellPhysical", logicWorld, false, 0, true);
+    
+    //
+    // Nx*Ny*Nz Detectors (rectangular prisms)
+    //
+    // half lengths of the detectors along each axis
+    auto Nx = 3;
+    G4double lx = xTube / Nx;
+    auto Ny = 3;
+    G4double ly = yTube / Ny;
+    auto Nz = 10;
+    G4double lz = zTube / Nz;
+    
+    
+    G4Box *solidDetector = new G4Box("solidDetector", lx, ly, lz);
+    
+    logicDetector = new G4LogicalVolume(solidDetector, LAr, "logicDetector");
     
     fScoringVolume = logicDetector; // define what our scoring volume is
     
-//    G4VPhysicalVolume *physTube = new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicTube, "physTube", logicWorld, false, 0, true);
-    G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicDetector, "physDetector", logicWorld, false, 0, true);
+    for(G4int k = 0; k < Nz; k++)
+    {
+        for(G4int i = 0; i < Nx; i++)
+        {
+            for(G4int j = 0; j < Ny; j++)
+            {
+                G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), true);
+            }
+        }
+    }
    
     return physWorld;
 }
