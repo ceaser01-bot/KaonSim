@@ -18,7 +18,7 @@ public:
     virtual G4VPhysicalVolume *Construct();
 
 private:
-    G4Material *H2O, *worldMat; // declrations moved into definition of class so they are only created once (not whenever we change something with messengers)
+    G4Material *LAr, *worldMat; // declrations moved into definition of class so they are only created once (not whenever we change something with messengers)
 
     void DefineMaterials(); // must define this new function so materials are only defined when the object of our detector construction is created
     virtual void ConstructSDandField(); // SD (sensitive detector) and field (B-field and E-field)

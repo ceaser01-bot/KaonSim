@@ -7,7 +7,6 @@
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4Tubs.hh"
 
 MyDetectorConstruction::MyDetectorConstruction()
 {
@@ -21,17 +20,16 @@ void MyDetectorConstruction::DefineMaterials()
 {
     G4NistManager *nist = G4NistManager::Instance();
     
-    H2O = new G4Material("H2O", 1.000*g/cm3, 2);
-    H2O->AddElement(nist->FindOrBuildElement("H"), 2);
-    H2O->AddElement(nist->FindOrBuildElement("O"), 1);
+    LAr = new G4Material("Liquid Argon", 1.390*g/cm3, 1);
+    LAr->AddElement(nist->FindOrBuildElement("Ar"), 1);
     
-    G4double energy[2] = {1.239841939*eV/0.55, 1.239841939*eV/0.3};
-    G4double rindexH2O[2] = {1.33, 1.33};
+//    G4double energy[2] = {*eV/, *eV/};
+//    G4double rindexLAr[2] = {,};
+//    
+//    G4MaterialPropertiesTable *mptLAr = new G4MaterialPropertiesTable();
+//    mptLAr->AddProperty("RINDEX", energy, rindexLAr, 2);
     
-    G4MaterialPropertiesTable *mptH2O = new G4MaterialPropertiesTable();
-    mptH2O->AddProperty("RINDEX", energy, rindexH2O, 2);
-    
-    // H2O->SetMaterialPropertiesTable(mptH2O);
+    // LAr->SetMaterialPropertiesTable(mptLAr);
     
     worldMat = nist->FindOrBuildMaterial("G4_AIR");
 }
@@ -41,9 +39,9 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     //
     // World
     //
-    G4double xWorld = 12.*m;
-    G4double yWorld = 12.*m;
-    G4double zWorld = 12.*m;
+    G4double xWorld = 5.5*m;
+    G4double yWorld = 5.5*m;
+    G4double zWorld = 5.5*m;
     
     G4Box *solidWorld = new G4Box("solidWorld", xWorld, yWorld, zWorld);
     
@@ -52,15 +50,16 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     G4VPhysicalVolume *physWorld = new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicWorld, "physWorld", 0, false, 0, true);
     
     //
-    // Cylinder (detector)
+    // Box (detector)
     //
-    G4double r = 1.9*m;
-    G4double h = 5.*m;
+    G4double xTube = 1.25*m;
+    G4double yTube = 1.15*m;
+    G4double zTube = 5.2*m;
  
-    G4Tubs *solidTube = new G4Tubs("solidTube", 0.*m, r, h, 0.*deg, 360.*deg);
+    G4Box *solidTube = new G4Box("solidTube", xTube, yTube, zTube);
     
 //    G4LogicalVolume *logicTube = new G4LogicalVolume(solidTube, H2O, "logicalTube");
-    logicDetector = new G4LogicalVolume(solidTube, H2O, "logicDetector");
+    logicDetector = new G4LogicalVolume(solidTube, LAr, "logicDetector");
     
     fScoringVolume = logicDetector; // define what our scoring volume is
     
