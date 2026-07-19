@@ -2,7 +2,8 @@
 #define CONSTRUCTION_HH
 
 #include "G4VUserDetectorConstruction.hh"
-#include "globals.hh"
+#include "G4ThreeVector.hh"
+#include <vector>
 
 class G4LogicalVolume;
 class G4Material;
@@ -12,12 +13,14 @@ class MyDetectorConstruction : public G4VUserDetectorConstruction
 public:
     MyDetectorConstruction();
     ~MyDetectorConstruction();
-    
-    G4LogicalVolume *GetScoringVolume() const { return fScoringVolume; }
+        
+    const G4ThreeVector& GetDetectorPosition(G4int detectorID) const;
     
     virtual G4VPhysicalVolume *Construct();
 
 private:
+    std::vector<G4ThreeVector> fDetectorPositions;
+    
     G4Material *LAr, *vacuum, *worldMat; // declrations moved into definition of class so they are only created once (not whenever we change something with messengers)
 
     void DefineMaterials(); // must define this new function so materials are only defined when the object of our detector construction is created
@@ -25,7 +28,7 @@ private:
     
     G4LogicalVolume *logicDetector; // sensitive volume has to refer to this logical volume (since we need to access it outside of the construction function)
     
-    G4LogicalVolume *fScoringVolume;
+//    G4LogicalVolume *fScoringVolume;
 
 };
 

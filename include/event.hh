@@ -2,18 +2,25 @@
 #define EVENT_HH
 
 #include "G4UserEventAction.hh"
+#include "G4ThreeVector.hh"
+#include "globals.hh"
+
+#include <map>
 
 class G4Event;
-class MyRunAction;
 
 class MyEventAction : public G4UserEventAction
 {
 public:
-    MyEventAction(MyRunAction*);
-    ~MyEventAction();
+    MyEventAction();
+    ~MyEventAction() override;
     
-    virtual void BeginOfEventAction(const G4Event*);
-    virtual void EndOfEventAction(const G4Event*);
+    void BeginOfEventAction(const G4Event*) override;
+    void EndOfEventAction(const G4Event*) override;
+    
+private:
+    G4int fEdepCollectionID = -1;
+    std::map<G4int, G4ThreeVector> fDetectorPositions;
 };
 
 #endif

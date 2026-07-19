@@ -1,5 +1,5 @@
 #include "construction.hh"
-#include "detector.hh"
+//#include "detector.hh"
 
 #include "G4Box.hh"
 #include "G4SubtractionSolid.hh"
@@ -8,7 +8,9 @@
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
-#include <cmath>
+#include "G4SDManager.hh"
+#include "G4MultiFunctionalDetector.hh"
+#include "G4PSEnergyDeposit.hh"
 
 MyDetectorConstruction::MyDetectorConstruction()
 {
@@ -88,8 +90,8 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     G4Box *solidDetector = new G4Box("solidDetector", lx, ly, lz);
     
     logicDetector = new G4LogicalVolume(solidDetector, LAr, "logicDetector");
-    
-    fScoringVolume = logicDetector; // define what our scoring volume is
+        
+    fDetectorPositions.clear();
     
     for(G4int k = 0; k < Nz; k++)
     {
@@ -97,6 +99,9 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
         {
             for(G4int j = 0; j < Ny; j++)
             {
+                const G4ThreeVector pos = G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz);
+                fDetectorPositions.push_back(pos); // adds the computed detector to the end of our vector
+                
                 G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), true);
             }
         }
@@ -105,15 +110,16 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     return physWorld;
 }
 
+const G4ThreeVector& MyDetectorConstruction::GetDetectorPosition(G4int detectorID) const
+{
+    return fDetectorPositions.at(detectorID); // .at(detectorID) gives you bounds checking
+}
+
 void MyDetectorConstruction::ConstructSDandField()
 {
-    MySensitiveDetector *sensDet = new MySensitiveDetector("SensitiveDetector");
-    // example B3a has
-        // auto cryst = new G4MultiFunctionalDetector("crystal")
-        // G4SDManager::GetSDMpointer()->AddNewDetector(cryst);
-    // instead of a user-written detector class
-    // info like Edep is recorded in its DetectorConstruction source file (not stepping action)
-    
-    logicDetector->SetSensitiveDetector(sensDet); // tells logic detector this is our sensitive detector
-    // could also use 'SetSensitiveDetector("name of logical detector volume", sensDet);'
+    auto* detectorSD = new G4MultiFunctionalDetector("DetectorSD");
+    G4SDManager::GetSDMpointer()->AddNewDetector(detectorSD);
+    G4VPrimitiveScorer* energyScorer = new G4PSEnergyDeposit("Edep");
+    detectorSD->RegisterPrimitive(energyScorer);
+    SetSensitiveDetector("logicDetector", detectorSD);
 }

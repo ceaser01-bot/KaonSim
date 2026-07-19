@@ -8,8 +8,13 @@ MyRunAction::MyRunAction()
     G4AnalysisManager *man = G4AnalysisManager::Instance();
     // following commands are in the constructor so they don't create Ntuple everytime run starts
 
-    man->CreateNtuple("Nothing", "Nothing"); // create columns
-    man->CreateNtupleDColumn("Nothing");
+    man->CreateNtuple("Hits", "Hits");
+    man->CreateNtupleIColumn("fEvent"); // event number
+    man->CreateNtupleIColumn("fCopyNo"); // detector ID
+    man->CreateNtupleDColumn("fEdep"); // total energy deposition
+    man->CreateNtupleDColumn("fX"); // x position of detector
+    man->CreateNtupleDColumn("fY"); // y position of detector
+    man->CreateNtupleDColumn("fZ"); // z position of detector
     man->FinishNtuple(0);
 }
 

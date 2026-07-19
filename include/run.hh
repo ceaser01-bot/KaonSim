@@ -6,9 +6,6 @@
 
 class MyRunAction : public G4UserRunAction
 {
-private:
-    G4int fNumInFlightKaons = 0;
-
 public:
     MyRunAction();
     ~MyRunAction();
