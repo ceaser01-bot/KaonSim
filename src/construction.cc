@@ -1,5 +1,5 @@
 #include "construction.hh"
-//#include "detector.hh"
+#include "detector.hh"
 
 #include "G4Box.hh"
 #include "G4SubtractionSolid.hh"
@@ -8,9 +8,7 @@
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4SDManager.hh"
-#include "G4MultiFunctionalDetector.hh"
-#include "G4PSEnergyDeposit.hh"
+#include <cmath>
 
 MyDetectorConstruction::MyDetectorConstruction()
 {
@@ -79,19 +77,19 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     // Nx*Ny*Nz Detectors (rectangular prisms)
     //
     // half lengths of the detectors along each axis
-    auto Nx = 20;
+    auto Nx = 3;
     G4double lx = xTube / Nx;
-    auto Ny = 20;
+    auto Ny = 3;
     G4double ly = yTube / Ny;
-    auto Nz = 50;
+    auto Nz = 10;
     G4double lz = zTube / Nz;
     
     
     G4Box *solidDetector = new G4Box("solidDetector", lx, ly, lz);
     
     logicDetector = new G4LogicalVolume(solidDetector, LAr, "logicDetector");
-        
-    fDetectorPositions.clear();
+    
+    fScoringVolume = logicDetector; // define what our scoring volume is
     
     for(G4int k = 0; k < Nz; k++)
     {
@@ -99,10 +97,7 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
         {
             for(G4int j = 0; j < Ny; j++)
             {
-                const G4ThreeVector pos = G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz);
-                fDetectorPositions.push_back(pos); // adds the computed detector position to the end of our vector
-                
-                G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(pos.x(), pos.y(), pos.z()), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), false); // check for overlaps is false since there are so many detectors (and it already checked for when there were not as many detectors)
+                G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), true);
             }
         }
     }
@@ -110,16 +105,15 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     return physWorld;
 }
 
-const G4ThreeVector& MyDetectorConstruction::GetDetectorPosition(G4int detectorID) const
-{
-    return fDetectorPositions.at(detectorID); // .at(detectorID) gives you bounds checking
-}
-
 void MyDetectorConstruction::ConstructSDandField()
 {
-    auto* detectorSD = new G4MultiFunctionalDetector("DetectorSD");
-    G4SDManager::GetSDMpointer()->AddNewDetector(detectorSD);
-    G4VPrimitiveScorer* energyScorer = new G4PSEnergyDeposit("Edep");
-    detectorSD->RegisterPrimitive(energyScorer);
-    SetSensitiveDetector("logicDetector", detectorSD);
+    MySensitiveDetector *sensDet = new MySensitiveDetector("SensitiveDetector");
+    // example B3a has
+        // auto cryst = new G4MultiFunctionalDetector("crystal")
+        // G4SDManager::GetSDMpointer()->AddNewDetector(cryst);
+    // instead of a user-written detector class
+    // info like Edep is recorded in its DetectorConstruction source file (not stepping action)
+    
+    logicDetector->SetSensitiveDetector(sensDet); // tells logic detector this is our sensitive detector
+    // could also use 'SetSensitiveDetector("name of logical detector volume", sensDet);'
 }

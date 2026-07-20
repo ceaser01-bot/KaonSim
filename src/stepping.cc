@@ -20,4 +20,15 @@ MySteppingAction::~MySteppingAction()
 {}
 
 void MySteppingAction::UserSteppingAction(const G4Step *step)
-{}
+{
+    // logical volume is where the particle currently is
+    G4LogicalVolume *volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+    
+    const MyDetectorConstruction *detectorConstruction = static_cast<const MyDetectorConstruction*> (G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+    
+    // scoring volume that we defined
+    G4LogicalVolume *fScoringVolume = detectorConstruction->GetScoringVolume();
+    
+    if(volume != fScoringVolume) // if the volume is not the scoring volume, close the function right here
+        return;
+}
