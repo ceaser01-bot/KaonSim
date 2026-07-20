@@ -79,11 +79,11 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
     // Nx*Ny*Nz Detectors (rectangular prisms)
     //
     // half lengths of the detectors along each axis
-    auto Nx = 3;
+    auto Nx = 20;
     G4double lx = xTube / Nx;
-    auto Ny = 3;
+    auto Ny = 20;
     G4double ly = yTube / Ny;
-    auto Nz = 10;
+    auto Nz = 50;
     G4double lz = zTube / Nz;
     
     
@@ -100,9 +100,9 @@ G4VPhysicalVolume *MyDetectorConstruction::Construct()
             for(G4int j = 0; j < Ny; j++)
             {
                 const G4ThreeVector pos = G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz);
-                fDetectorPositions.push_back(pos); // adds the computed detector to the end of our vector
+                fDetectorPositions.push_back(pos); // adds the computed detector position to the end of our vector
                 
-                G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(-xTube+(2*i+1)*lx, -yTube+(2*j+1)*ly, -zTube+(2*k+1)*lz), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), true);
+                G4VPhysicalVolume *physDetector = new G4PVPlacement(0, G4ThreeVector(pos.x(), pos.y(), pos.z()), logicDetector, "physDetector", logicWorld, false, j+i*Ny+k*(Nx*Ny), false); // check for overlaps is false since there are so many detectors (and it already checked for when there were not as many detectors)
             }
         }
     }
